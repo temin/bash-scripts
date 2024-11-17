@@ -1,0 +1,5 @@
+s/\$@FILEPHP@\$/course_files/g
+s|\$@SLASH@\$|/|g
+s|src="//www|src="http://www|g
+:x /\/$/ { N; s/<\/\n/<\//g ; bx }
+s|http://www.youtube.com|https://www.youtube.com|g
