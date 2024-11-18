@@ -1,8 +1,8 @@
 # Convert Moodle backup to HTML pages
 
-This Bash script converts Moodle course backup files to HTML pages. Script creates an index page and a page for each section,
+This Bash script converts Moodle course backup files to HTML pages. Script creates an index page and a separate page for each section in a course.
 
-Script was built for converting backups from Moodle version 1.9. Specificaly to convert OER course "[Observing the 1980s](https://blogs.sussex.ac.uk/observingthe80s/home/oer)".
+Script is currently built for converting backups from Moodle version 1.9. For now it covers only content types that are present in OER course "[Observing the 1980s](https://blogs.sussex.ac.uk/observingthe80s/home/oer)". 
 
 Script uses:
 

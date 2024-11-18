@@ -1,39 +1,52 @@
 #!/bin/bash
 
 xml="$(cat moodle.xml)" # Moodle backup XML file
-outputPath="./moodle-book" # Output directory
+outputPath="./output" # Output directory
 filenamePrefix="section_" # File Name: `prefix` + `section number` + `.html` 
+licence=""
+matomoCode="""
+
+"""
 
 # Section count
 sectionNumber="$(echo ${xml} | xmlstarlet sel -t -v "//SECTION/ID" | wc -l)"
 
 # BEGIN Create index page
-# Add section data to HTML
-echo "Processing: index"
-htmlContent+="<!DOCTYPE html><html lang=\"\"><head><meta charset=\"utf-8\"><title>${sectionTitle}</title><link rel="stylesheet" href="style.css"></head><body id=\"course-section\">"
-  htmlContent+="<header>"
-    htmlContent+="<h1 id=\"course-title\">$(echo ${xml} | xmlstarlet sel -t -v '//COURSE/HEADER/FULLNAME')</h1>"
-    htmlContent+="<p id=\"course-summary\">$(echo ${xml} | xmlstarlet sel -t -v '//COURSE/HEADER/SUMMARY')</p>"
-  htmlContent+="</header>"
-  htmlContent+="<main id=\"course-index\"><h2 class=\"course-index\">Course Index</h2>"
+  # Add section data to HTML
+  echo "Processing: index"
+  courseTitle="$(echo ${xml} | xmlstarlet sel -t -v '//COURSE/HEADER/FULLNAME')"
+  htmlContent+="<!DOCTYPE html><html lang=\"en\">"
+  htmlContent+="<head><meta charset=\"utf-8\"><title>${courseTitle}</title><link rel=\"stylesheet\" href=\"style.css\"></head>"
+  htmlContent+="<body id=\"course-index\">"
+    htmlContent+="<header>"
+      htmlContent+="<img id=\"course-image\" src=\"course_pictures/f1.jpg\" />"
+      htmlContent+="<h1 id=\"course-title\">${courseTitle}</h1>"
+      htmlContent+="<p id=\"course-summary\">$(echo ${xml} | xmlstarlet sel -t -v '//COURSE/HEADER/SUMMARY')</p>"
+    htmlContent+="</header>"
+    htmlContent+="<main id=\"course-index\"><h2 class=\"course-index\">Course Index</h2><ul class=\"course-index\">"
 
-# Create first page with index
-while read -r section; do
+  # Create first page with index
+  while read -r section; do
 
-  # BEGIN Processing section data
-    # Get section data
-      sectionTitle="$(echo ${xml} | xmlstarlet sel -t -m "//SECTION[NUMBER='${section}']" -v 'NAME' | w3m -dump -T text/html | sed -f sed-commands)"
-      htmlContent+="<p class=\"course-index\"><a href=\"${filenamePrefix}${section}.html\">${sectionTitle}</a></p>"
+    # BEGIN Processing section data
+      # Get section data
+        sectionTitle="$(echo ${xml} | xmlstarlet sel -t -m "//SECTION[NUMBER='${section}']" -v 'NAME' | w3m -dump -T text/html | sed -f sed-commands)"
+        htmlContent+="<li><a href=\"${filenamePrefix}${section}.html\">${sectionTitle}</a></li>"
 
-done < <(echo ${xml} | xmlstarlet sel -t \
-                        -m '//SECTIONS' \
-                        -v 'SECTION/NUMBER' \
-                        -n )
+  done < <(echo ${xml} | xmlstarlet sel -t \
+                          -m '//SECTIONS' \
+                          -v 'SECTION/NUMBER' \
+                          -n )
 
-  htmlContent+="</main>"
-htmlContent+="</body></html>"
+    htmlContent+="</main>"
+    htmlContent+="<footer>"
+      htmlContent+="${matomoCode}"
+      htmlContent+="${licence}"
+    htmlContent+="</footer>"
+  htmlContent+="</body></html>"
+  
 
-echo "${htmlContent}" > ${outputPath}/index.html
+  echo "${htmlContent}" > ${outputPath}/index.html
 # END Create index page
 
 # BEGIN Create section pages
@@ -55,13 +68,14 @@ while read -r section; do
         if [[ ${section} != ${sectionNumber} ]]; then
           htmlContent+="<div class=\"section-next\"><a href=\"${filenamePrefix}$(expr ${section} + 1).html\">next section</a></div>"
         fi
+        # Add section data to HTML
+        htmlContent+="<article id=\"section\">"
+          htmlContent+="<h1 id=\"section-title\">${sectionTitle}</h1>"
+          htmlContent+="<div id=\"section-summary\"><p id=\"section-label\">section | label</p>${sectionSummary}</div>"
+        htmlContent+="</article>"
       htmlContent+="</header>"
+      htmlContent+="<main id=\"course-modules\">"
 
-      # Add section data to HTML
-      htmlContent+="<article id=\"section\">"
-        htmlContent+="<h1 id=\"section-title\">${sectionTitle}</h1>"
-        htmlContent+="<div id=\"section-summary\">${sectionSummary}</div>"
-      htmlContent+="</article>"
   # END Processing section data
 
   # BEGIN Processing module data
@@ -134,17 +148,21 @@ while read -r section; do
 
       htmlContent+="</article>"
     done
+    htmlContent+="</main>"
+
   # END Processing module data
 
     # Add section navigation
     htmlContent+="<footer>"
-      if [[ ${section} > 0 ]]; then
+      if [[ ${section} != 0 ]]; then
         htmlContent+="<div class=\"section-previous\"><a href=\"${filenamePrefix}$(expr ${section} - 1).html\">previous section</a></div>"
       fi
       htmlContent+="<div class=\"section-index\"><a href=\"index.html\">index</a></div>"
-      if [[ ${section} < ${sectionNumber} ]]; then
+      if [[ ${section} != ${sectionNumber} ]]; then
         htmlContent+="<div class=\"section-next\"><a href=\"${filenamePrefix}$(expr ${section} + 1).html\">next section</a></div>"
       fi
+      htmlContent+="${matomoCode}"
+      htmlContent+="${licence}"
     htmlContent+="</footer>"
   htmlContent+="</body></html>"
 
